@@ -56,7 +56,8 @@ Rules:
     })
 
     const raw = response.content[0].type === 'text' ? response.content[0].text : '[]'
-    const entries = JSON.parse(raw)
+    const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
+    const entries = JSON.parse(cleaned)
     return res.status(200).json({ entries })
   } catch (error: any) {
     return res.status(500).json({ error: error.message ?? 'Failed to process image' })
