@@ -34,6 +34,10 @@ export default function App() {
     return newRow
   }
 
+  function handleRowDelete(id: number) {
+    setRows((prev) => prev.filter((r) => r.id !== id))
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -41,7 +45,7 @@ export default function App() {
       <Box sx={{ p: 3, bgcolor: 'background.default', minHeight: 'calc(100vh - 64px)' }}>
         <ImageUploader loading={loading} onProcess={handleProcess} />
         {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
-        {rows.length > 0 && <TimeEntryGrid rows={rows} onRowUpdate={handleRowUpdate} />}
+        {rows.length > 0 && <TimeEntryGrid rows={rows} onRowUpdate={handleRowUpdate} onRowDelete={handleRowDelete} />}
       </Box>
     </ThemeProvider>
   )

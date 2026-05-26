@@ -1,23 +1,43 @@
 import { DataGrid } from '@mui/x-data-grid'
 import type { GridColDef, GridRowModel } from '@mui/x-data-grid'
-import { Box, Typography } from '@mui/material'
+import { Box, IconButton, Tooltip, Typography } from '@mui/material'
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import type { TimeEntry } from '../types'
-
-const columns: GridColDef[] = [
-  { field: 'client',   headerName: 'Client',   flex: 1, minWidth: 140, editable: true },
-  { field: 'project',  headerName: 'Project',  flex: 1, minWidth: 160, editable: true },
-  { field: 'task',     headerName: 'Task',     flex: 1, minWidth: 160, editable: true },
-  { field: 'hours',    headerName: 'Hours',    width: 80,  editable: true },
-  { field: 'billable', headerName: 'Billable', width: 90,  editable: true, type: 'boolean' },
-  { field: 'notes',    headerName: 'Notes',    flex: 1, minWidth: 160, editable: true },
-]
 
 type Props = {
   rows: TimeEntry[]
   onRowUpdate: (newRow: GridRowModel) => GridRowModel
+  onRowDelete: (id: number) => void
 }
 
-export default function TimeEntryGrid({ rows, onRowUpdate }: Props) {
+export default function TimeEntryGrid({ rows, onRowUpdate, onRowDelete }: Props) {
+  const columns: GridColDef[] = [
+    { field: 'client',   headerName: 'Client',   flex: 1, minWidth: 140, editable: true },
+    { field: 'project',  headerName: 'Project',  flex: 1, minWidth: 160, editable: true },
+    { field: 'task',     headerName: 'Task',     flex: 1, minWidth: 160, editable: true },
+    { field: 'hours',    headerName: 'Hours',    width: 80,  editable: true },
+    { field: 'billable', headerName: 'Billable', width: 90,  editable: true, type: 'boolean' },
+    { field: 'notes',    headerName: 'Notes',    flex: 1, minWidth: 160, editable: true },
+    {
+      field: 'actions',
+      headerName: '',
+      width: 56,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => (
+        <Tooltip title="Remove row">
+          <IconButton
+            size="small"
+            onClick={() => onRowDelete(params.row.id)}
+            sx={{ color: 'text.disabled', '&:hover': { color: 'error.main' } }}
+          >
+            <DeleteOutlineIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      ),
+    },
+  ]
+
   return (
     <Box>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
