@@ -1,7 +1,7 @@
 import { useGridApiContext, DataGrid } from '@mui/x-data-grid'
 import type { GridColDef, GridRowModel, GridRenderEditCellParams } from '@mui/x-data-grid'
-import { Box, IconButton, TextField, Tooltip, Typography } from '@mui/material'
-import { DeleteOutlined as DeleteOutlineIcon } from '@mui/icons-material'
+import { Box, Button, IconButton, TextField, Tooltip, Typography } from '@mui/material'
+import { DeleteOutlined as DeleteOutlineIcon, AddCircleOutline as AddRowIcon } from '@mui/icons-material'
 import type { TimeEntry } from '../types'
 
 function NotesEditCell(params: GridRenderEditCellParams) {
@@ -25,9 +25,10 @@ type Props = {
   rows: TimeEntry[]
   onRowUpdate: (newRow: GridRowModel) => GridRowModel
   onRowDelete: (id: number) => void
+  onRowAdd: () => void
 }
 
-export default function TimeEntryGrid({ rows, onRowUpdate, onRowDelete }: Props) {
+export default function TimeEntryGrid({ rows, onRowUpdate, onRowDelete, onRowAdd }: Props) {
   const columns: GridColDef[] = [
     { field: 'client',   headerName: 'Client',   flex: 1, minWidth: 140, editable: true },
     { field: 'project',  headerName: 'Project',  flex: 1, minWidth: 160, editable: true },
@@ -70,16 +71,20 @@ export default function TimeEntryGrid({ rows, onRowUpdate, onRowDelete }: Props)
   if (rows.length === 0) {
     return (
       <Box sx={{ p: 4, textAlign: 'center', border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-        <Typography variant="body1" color="text.secondary">No data available for upload</Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>No data available for upload</Typography>
+        <Button variant="outlined" startIcon={<AddRowIcon />} onClick={onRowAdd}>Add Row</Button>
       </Box>
     )
   }
 
   return (
     <Box>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-        {rows.length} entr{rows.length === 1 ? 'y' : 'ies'} extracted — click any cell to edit
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+        <Typography variant="body2" color="text.secondary">
+          {rows.length} entr{rows.length === 1 ? 'y' : 'ies'} extracted — click any cell to edit
+        </Typography>
+        <Button size="small" startIcon={<AddRowIcon />} onClick={onRowAdd}>Add Row</Button>
+      </Box>
       <DataGrid
         rows={rows}
         columns={columns}

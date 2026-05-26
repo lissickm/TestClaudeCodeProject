@@ -39,6 +39,11 @@ export default function App() {
     setRows((prev) => prev.filter((r) => r.id !== id))
   }
 
+  function handleRowAdd() {
+    const newId = Math.max(0, ...rows.map((r) => r.id)) + 1
+    setRows((prev) => [...prev, { id: newId, client: '', project: '', task: '', hours: '', billable: null, notes: '' }])
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -52,7 +57,7 @@ export default function App() {
         <ErrorAlert error={error instanceof Error ? error : null} onDismiss={reset} />
         {isPending && <GridSkeleton />}
         {!isPending && hasProcessed && (
-          <TimeEntryGrid rows={rows} onRowUpdate={handleRowUpdate} onRowDelete={handleRowDelete} />
+          <TimeEntryGrid rows={rows} onRowUpdate={handleRowUpdate} onRowDelete={handleRowDelete} onRowAdd={handleRowAdd} />
         )}
       </Box>
     </ThemeProvider>
