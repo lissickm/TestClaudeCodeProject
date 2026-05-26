@@ -1,18 +1,15 @@
 import { useGridApiContext, DataGrid } from '@mui/x-data-grid'
 import type { GridColDef, GridRowModel, GridRenderEditCellParams } from '@mui/x-data-grid'
-import { Box, Button, IconButton, TextField, Tooltip, Typography } from '@mui/material'
+import { Box, Button, IconButton, MenuItem, Select, TextField, Tooltip, Typography } from '@mui/material'
 import { DeleteOutlined as DeleteOutlineIcon, AddCircleOutlined as AddRowIcon } from '@mui/icons-material'
 import type { TimeEntry } from '../types'
+import type { ClicktimeData } from '../services/clicktimeData'
 
 function NotesEditCell(params: GridRenderEditCellParams) {
   const api = useGridApiContext()
-
   return (
     <TextField
-      multiline
-      fullWidth
-      autoFocus
-      variant="standard"
+      multiline fullWidth autoFocus variant="standard"
       value={params.value ?? ''}
       onChange={(e) => api.current.setEditCellValue({ id: params.id, field: params.field, value: e.target.value })}
       sx={{ px: 1, '& .MuiInput-root': { fontSize: 13 } }}
@@ -21,39 +18,68 @@ function NotesEditCell(params: GridRenderEditCellParams) {
   )
 }
 
+function SelectEditCell({ params, options }: { params: GridRenderEditCellParams; options: string[] }) {
+  const api = useGridApiContext()
+  return (
+    <Select
+      autoFocus fullWidth size="small" variant="standard"
+      value={params.value ?? ''}
+      onChange={(e) => api.current.setEditCellValue({ id: params.id, field: params.field, value: e.target.value })}
+      sx={{ px: 1, fontSize: 13 }}
+    >
+      <MenuItem value=""><em>None</em></MenuItem>
+      {options.map((opt) => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
+    </Select>
+  )
+}
+
 type Props = {
   rows: TimeEntry[]
+  clicktimeData?: ClicktimeData
   onRowUpdate: (newRow: GridRowModel) => GridRowModel
   onRowDelete: (id: number) => void
   onRowAdd: () => void
 }
 
-export default function TimeEntryGrid({ rows, onRowUpdate, onRowDelete, onRowAdd }: Props) {
+export default function TimeEntryGrid({ rows, clicktimeData, onRowUpdate, onRowDelete, onRowAdd }: Props) {
+  const clientNames  = clicktimeData?.clients.map((c) => c.name) ?? []
+
+  function getProjectOptions(clientName: string) {
+    if (!clicktimeData || !clientName) return []
+    const clientId = clicktimeData.clients.find((c) => c.name === clientName)?.id
+    return clicktimeData.projects.filter((p) => p.clientId === clientId).map((p) => p.name)
+  }
+
+  function getTaskOptions(clientName: string) {
+    if (!clicktimeData || !clientName) return []
+    const clientId = clicktimeData.clients.find((c) => c.name === clientName)?.id
+    return clicktimeData.tasks.filter((t) => t.clientId === clientId).map((t) => t.name)
+  }
+
   const columns: GridColDef[] = [
-    { field: 'client',   headerName: 'Client',   flex: 1, minWidth: 140, editable: true },
-    { field: 'project',  headerName: 'Project',  flex: 1, minWidth: 160, editable: true },
-    { field: 'task',     headerName: 'Task',     flex: 1, minWidth: 160, editable: true },
-    { field: 'hours',    headerName: 'Hours',    width: 80,  editable: true },
-    { field: 'billable', headerName: 'Billable', width: 90,  editable: true, type: 'boolean' },
     {
-      field: 'notes',
-      headerName: 'Notes',
-      flex: 1,
-      minWidth: 160,
-      editable: true,
+      field: 'client', headerName: 'Client', flex: 1, minWidth: 140, editable: true,
+      renderEditCell: (params) => <SelectEditCell params={params} options={clientNames} />,
+    },
+    {
+      field: 'project', headerName: 'Project', flex: 1, minWidth: 160, editable: true,
+      renderEditCell: (params) => <SelectEditCell params={params} options={getProjectOptions(params.row.client)} />,
+    },
+    {
+      field: 'task', headerName: 'Task', flex: 1, minWidth: 160, editable: true,
+      renderEditCell: (params) => <SelectEditCell params={params} options={getTaskOptions(params.row.client)} />,
+    },
+    { field: 'hours',    headerName: 'Hours',    width: 80, editable: true },
+    { field: 'billable', headerName: 'Billable', width: 90, editable: true, type: 'boolean' },
+    {
+      field: 'notes', headerName: 'Notes', flex: 1, minWidth: 160, editable: true,
       renderCell: (params) => (
-        <Box sx={{ whiteSpace: 'normal', lineHeight: 1.4, py: 1, fontSize: 13 }}>
-          {params.value}
-        </Box>
+        <Box sx={{ whiteSpace: 'normal', lineHeight: 1.4, py: 1, fontSize: 13 }}>{params.value}</Box>
       ),
       renderEditCell: (params) => <NotesEditCell {...params} />,
     },
     {
-      field: 'actions',
-      headerName: '',
-      width: 56,
-      sortable: false,
-      filterable: false,
+      field: 'actions', headerName: '', width: 56, sortable: false, filterable: false,
       renderCell: (params) => (
         <Tooltip title="Remove row">
           <IconButton

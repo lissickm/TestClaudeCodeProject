@@ -2,6 +2,19 @@ import Anthropic from '@anthropic-ai/sdk'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
+type ClicktimeClient  = { id: string; name: string }
+type ClicktimeProject = { id: string; name: string; clientId: string }
+type ClicktimeTask    = { id: string; name: string; clientId: string }
+type ClicktimeData    = { clients: ClicktimeClient[]; projects: ClicktimeProject[]; tasks: ClicktimeTask[] }
+
+function buildHierarchyPrompt(data: ClicktimeData): string {
+  return data.clients.map((c) => {
+    const projects = data.projects.filter((p) => p.clientId === c.id).map((p) => p.name).join(', ')
+    const tasks    = data.tasks.filter((t) => t.clientId === c.id).map((t) => t.name).join(', ')
+    return `Client: ${c.name}\n  Projects: ${projects || 'none'}\n  Tasks: ${tasks || 'none'}`
+  }).join('\n\n')
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -11,11 +24,15 @@ export default async function handler(req: any, res: any) {
     return res.status(401).json({ error: 'Unauthorized' })
   }
 
-  const { imageBase64, mediaType } = req.body
+  const { imageBase64, mediaType, clicktimeData } = req.body
 
   if (!imageBase64) {
     return res.status(400).json({ error: 'No image provided' })
   }
+
+  const hierarchySection = clicktimeData
+    ? `\nAvailable ClickTime data — match extracted values to the closest name from these lists:\n\n${buildHierarchyPrompt(clicktimeData)}\n`
+    : ''
 
   try {
     const response = await client.messages.create({
@@ -35,7 +52,7 @@ export default async function handler(req: any, res: any) {
             },
             {
               type: 'text',
-              text: `This image contains a ClickTime timesheet. Extract every time entry row and return a JSON array with this exact shape:
+              text: `This image contains time entry data. Extract every entry and return a JSON array with this exact shape:
 [
   {
     "client": "string",
@@ -43,20 +60,16 @@ export default async function handler(req: any, res: any) {
     "task": "string",
     "hours": "string",
     "billable": true | false | null,
-    "notes": "string",
-    "customFields": { "fieldName": "value" }
+    "notes": "string"
   }
 ]
-
+${hierarchySection}
 Rules:
-- One object per time entry row
-- "client" is the client name
-- "project" is the project name or code
-- "task" is the task description
-- "hours" is the total hours as a string (e.g. "2.5", "3.25")
+- One object per entry
+- Match "client", "project", and "task" to the closest name from the available data above — use exact names as listed
+- "hours" is total hours as a string (e.g. "2.5", "3.25")
 - "billable" is true if marked billable, false if non-billable, null if not indicated
-- "notes" is any note text associated with the entry, or empty string if none
-- "customFields" is an object of any additional fields visible in the entry, or empty object if none
+- "notes" is any note text, or empty string if none
 - Return only the raw JSON array, no explanation or markdown`,
             },
           ],
@@ -64,7 +77,7 @@ Rules:
       ],
     })
 
-    const raw = response.content[0].type === 'text' ? response.content[0].text : '[]'
+    const raw     = response.content[0].type === 'text' ? response.content[0].text : '[]'
     const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
     const entries = JSON.parse(cleaned)
     return res.status(200).json({ entries })
