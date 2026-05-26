@@ -67,6 +67,14 @@ export default function TimeEntryGrid({ rows, onRowUpdate, onRowDelete }: Props)
     },
   ]
 
+  if (rows.length === 0) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center', border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+        <Typography variant="body1" color="text.secondary">No data available for upload</Typography>
+      </Box>
+    )
+  }
+
   return (
     <Box>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>

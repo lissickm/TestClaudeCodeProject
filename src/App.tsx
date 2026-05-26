@@ -15,6 +15,7 @@ import { useMemo } from 'react'
 export default function App() {
   const [darkMode, setDarkMode] = useState(false)
   const [rows, setRows] = useState<TimeEntry[]>([])
+  const [hasProcessed, setHasProcessed] = useState(false)
 
   const theme = useMemo(() => buildTheme(darkMode), [darkMode])
 
@@ -25,7 +26,7 @@ export default function App() {
     setRows([])
     processImage(
       { imageBase64, mediaType },
-      { onSuccess: (entries) => setRows(entries) }
+      { onSuccess: (entries) => { setRows(entries); setHasProcessed(true) } }
     )
   }
 
@@ -50,7 +51,7 @@ export default function App() {
         />
         <ErrorAlert error={error instanceof Error ? error : null} onDismiss={reset} />
         {isPending && <GridSkeleton />}
-        {!isPending && rows.length > 0 && (
+        {!isPending && hasProcessed && (
           <TimeEntryGrid rows={rows} onRowUpdate={handleRowUpdate} onRowDelete={handleRowDelete} />
         )}
       </Box>
