@@ -1,8 +1,25 @@
-import { DataGrid } from '@mui/x-data-grid'
-import type { GridColDef, GridRowModel } from '@mui/x-data-grid'
-import { Box, IconButton, Tooltip, Typography } from '@mui/material'
+import { useGridApiContext, DataGrid } from '@mui/x-data-grid'
+import type { GridColDef, GridRowModel, GridRenderEditCellParams } from '@mui/x-data-grid'
+import { Box, IconButton, TextField, Tooltip, Typography } from '@mui/material'
 import { DeleteOutlined as DeleteOutlineIcon } from '@mui/icons-material'
 import type { TimeEntry } from '../types'
+
+function NotesEditCell(params: GridRenderEditCellParams) {
+  const api = useGridApiContext()
+
+  return (
+    <TextField
+      multiline
+      fullWidth
+      autoFocus
+      variant="standard"
+      value={params.value ?? ''}
+      onChange={(e) => api.current.setEditCellValue({ id: params.id, field: params.field, value: e.target.value })}
+      sx={{ px: 1, '& .MuiInput-root': { fontSize: 13 } }}
+      slotProps={{ input: { style: { resize: 'none' } } }}
+    />
+  )
+}
 
 type Props = {
   rows: TimeEntry[]
@@ -17,7 +34,19 @@ export default function TimeEntryGrid({ rows, onRowUpdate, onRowDelete }: Props)
     { field: 'task',     headerName: 'Task',     flex: 1, minWidth: 160, editable: true },
     { field: 'hours',    headerName: 'Hours',    width: 80,  editable: true },
     { field: 'billable', headerName: 'Billable', width: 90,  editable: true, type: 'boolean' },
-    { field: 'notes',    headerName: 'Notes',    flex: 1, minWidth: 160, editable: true },
+    {
+      field: 'notes',
+      headerName: 'Notes',
+      flex: 1,
+      minWidth: 160,
+      editable: true,
+      renderCell: (params) => (
+        <Box sx={{ whiteSpace: 'normal', lineHeight: 1.4, py: 1, fontSize: 13 }}>
+          {params.value}
+        </Box>
+      ),
+      renderEditCell: (params) => <NotesEditCell {...params} />,
+    },
     {
       field: 'actions',
       headerName: '',
@@ -49,8 +78,10 @@ export default function TimeEntryGrid({ rows, onRowUpdate, onRowDelete }: Props)
         processRowUpdate={onRowUpdate}
         disableRowSelectionOnClick
         autoHeight
+        getRowHeight={() => 'auto'}
         pageSizeOptions={[10, 25, 50]}
         initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+        sx={{ '& .MuiDataGrid-cell': { alignItems: 'flex-start', py: 1 } }}
       />
     </Box>
   )
