@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/opt/homebrew/bin/brew install *)",
+      "Bash(/opt/homebrew/bin/npm create *)",
+      "Bash(/opt/homebrew/bin/npx create-vite@latest . --template react-ts -- --overwrite)",
+      "Bash(/opt/homebrew/bin/npm list *)",
+      "Bash(/opt/homebrew/bin/npm install *)"
+    ]
+  }
+}
