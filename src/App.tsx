@@ -51,7 +51,7 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Header darkMode={darkMode} onToggle={setDarkMode} />
+      <Header darkMode={darkMode} onToggle={setDarkMode} clicktimeData={clicktimeData} />
       <Box sx={{ p: 3, bgcolor: 'background.default', minHeight: 'calc(100vh - 64px)' }}>
         <ImageUploader loading={isPending} clicktimeLoading={clicktimeLoading} onProcess={handleProcess} />
         <ErrorAlert error={error instanceof Error ? error : null} onDismiss={reset} />
