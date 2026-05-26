@@ -1,7 +1,7 @@
 import { useGridApiContext, DataGrid } from '@mui/x-data-grid'
 import type { GridColDef, GridRowModel, GridRenderEditCellParams } from '@mui/x-data-grid'
 import { Box, Button, IconButton, TextField, Tooltip, Typography } from '@mui/material'
-import { DeleteOutlined as DeleteOutlineIcon, AddCircleOutline as AddRowIcon } from '@mui/icons-material'
+import { DeleteOutlined as DeleteOutlineIcon, AddCircleOutlined as AddRowIcon } from '@mui/icons-material'
 import type { TimeEntry } from '../types'
 
 function NotesEditCell(params: GridRenderEditCellParams) {
