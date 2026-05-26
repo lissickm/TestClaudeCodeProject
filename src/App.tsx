@@ -6,24 +6,33 @@ import {
   CardContent,
   CircularProgress,
   CssBaseline,
-  Divider,
   FormControlLabel,
   Switch,
   ThemeProvider,
   Typography,
   createTheme,
 } from '@mui/material'
+import { DataGrid, GridColDef, GridRowModel } from '@mui/x-data-grid'
 import UploadFileIcon from '@mui/icons-material/UploadFile'
 
 type TimeEntry = {
+  id: number
   client: string
   project: string
   task: string
   hours: string
   billable: boolean | null
   notes: string
-  customFields: Record<string, string>
 }
+
+const columns: GridColDef[] = [
+  { field: 'client',   headerName: 'Client',   flex: 1, minWidth: 130, editable: true },
+  { field: 'project',  headerName: 'Project',  flex: 1, minWidth: 150, editable: true },
+  { field: 'task',     headerName: 'Task',     flex: 1, minWidth: 150, editable: true },
+  { field: 'hours',    headerName: 'Hours',    width: 80,  editable: true },
+  { field: 'billable', headerName: 'Billable', width: 90,  editable: true, type: 'boolean' },
+  { field: 'notes',    headerName: 'Notes',    flex: 1, minWidth: 150, editable: true },
+]
 
 function App() {
   const [darkMode, setDarkMode] = useState(false)
@@ -31,7 +40,7 @@ function App() {
   const [imageBase64, setImageBase64] = useState<string | null>(null)
   const [mediaType, setMediaType] = useState<string>('image/jpeg')
   const [imageName, setImageName] = useState<string | null>(null)
-  const [entries, setEntries] = useState<TimeEntry[] | null>(null)
+  const [rows, setRows] = useState<TimeEntry[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -44,11 +53,10 @@ function App() {
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-
     setImageName(file.name)
     setMediaType(file.type || 'image/jpeg')
     setImageUrl(URL.createObjectURL(file))
-    setEntries(null)
+    setRows([])
     setError(null)
 
     const reader = new FileReader()
@@ -62,7 +70,7 @@ function App() {
   async function handleProcess() {
     if (!imageBase64) return
     setLoading(true)
-    setEntries(null)
+    setRows([])
     setError(null)
 
     try {
@@ -76,7 +84,7 @@ function App() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      setEntries(data.entries)
+      setRows(data.entries.map((e: Omit<TimeEntry, 'id'>, i: number) => ({ ...e, id: i })))
     } catch (err: any) {
       setError(err.message ?? 'Something went wrong')
     } finally {
@@ -84,37 +92,33 @@ function App() {
     }
   }
 
+  function handleRowUpdate(newRow: GridRowModel) {
+    setRows((prev) => prev.map((r) => (r.id === newRow.id ? (newRow as TimeEntry) : r)))
+    return newRow
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <Card sx={{ p: 2, minWidth: 360, maxWidth: 600, width: '100%', textAlign: 'center' }}>
+      <Box sx={{ p: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h5">Time Entry Extractor</Typography>
+          <FormControlLabel
+            control={<Switch checked={darkMode} onChange={(e) => setDarkMode(e.target.checked)} />}
+            label="Dark mode"
+          />
+        </Box>
+
+        <Card sx={{ mb: 3 }}>
           <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={darkMode}
-                    onChange={(e) => setDarkMode(e.target.checked)}
-                  />
-                }
-                label="Dark mode"
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+              <input
+                ref={inputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
               />
-            </Box>
-
-            <Typography variant="h5" gutterBottom>
-              Time Entry Extractor
-            </Typography>
-
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handleFileChange}
-            />
-
-            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mt: 1, mb: 3 }}>
               <Button
                 variant="contained"
                 startIcon={<UploadFileIcon />}
@@ -130,63 +134,42 @@ function App() {
               >
                 {loading ? <CircularProgress size={20} color="inherit" /> : 'Process'}
               </Button>
+              {imageName && (
+                <Typography variant="body2" color="text.secondary">{imageName}</Typography>
+              )}
             </Box>
 
             {imageUrl && (
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  {imageName}
-                </Typography>
-                <Box
-                  component="img"
-                  src={imageUrl}
-                  alt={imageName ?? 'uploaded image'}
-                  sx={{ width: '100%', borderRadius: 2, boxShadow: 3 }}
-                />
-              </Box>
-            )}
-
-            {error && (
-              <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-                {error}
-              </Typography>
-            )}
-
-            {entries && entries.length > 0 && (
-              <Box sx={{ mt: 2, textAlign: 'left' }}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Extracted Entries
-                </Typography>
-                {entries.map((entry, i) => (
-                  <Box key={i} sx={{ p: 2, mb: 1, borderRadius: 2, bgcolor: 'action.hover' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{entry.client}</Typography>
-                      {entry.billable !== null && (
-                        <Typography variant="caption" sx={{ px: 1, py: 0.25, borderRadius: 1, bgcolor: entry.billable ? 'success.main' : 'warning.main', color: 'white' }}>
-                          {entry.billable ? 'Billable' : 'Non-billable'}
-                        </Typography>
-                      )}
-                    </Box>
-                    <Typography variant="body2" color="text.secondary">{entry.project}</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{entry.task}</Typography>
-                    <Divider sx={{ mb: 1 }} />
-                    <Typography variant="body2">Hours: <strong>{entry.hours}</strong></Typography>
-                    {entry.notes && (
-                      <Typography variant="body2" sx={{ mt: 0.5 }}>Notes: {entry.notes}</Typography>
-                    )}
-                    {Object.keys(entry.customFields ?? {}).length > 0 && (
-                      <Box sx={{ mt: 0.5 }}>
-                        {Object.entries(entry.customFields).map(([key, val]) => (
-                          <Typography key={key} variant="body2">{key}: {val}</Typography>
-                        ))}
-                      </Box>
-                    )}
-                  </Box>
-                ))}
-              </Box>
+              <Box
+                component="img"
+                src={imageUrl}
+                alt={imageName ?? 'uploaded image'}
+                sx={{ mt: 2, maxWidth: '100%', maxHeight: 300, objectFit: 'contain', borderRadius: 2, boxShadow: 3, display: 'block' }}
+              />
             )}
           </CardContent>
         </Card>
+
+        {error && (
+          <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>
+        )}
+
+        {rows.length > 0 && (
+          <Box>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              {rows.length} entr{rows.length === 1 ? 'y' : 'ies'} extracted — click any cell to edit
+            </Typography>
+            <DataGrid
+              rows={rows}
+              columns={columns}
+              processRowUpdate={handleRowUpdate}
+              disableRowSelectionOnClick
+              autoHeight
+              pageSizeOptions={[10, 25, 50]}
+              initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+            />
+          </Box>
+        )}
       </Box>
     </ThemeProvider>
   )
