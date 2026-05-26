@@ -1,5 +1,6 @@
 import { useState, useRef, useMemo } from 'react'
 import {
+  AppBar,
   Box,
   Button,
   Card,
@@ -9,12 +10,14 @@ import {
   FormControlLabel,
   Switch,
   ThemeProvider,
+  Toolbar,
+  Tooltip,
   Typography,
-  createTheme,
 } from '@mui/material'
 import { DataGrid } from '@mui/x-data-grid'
 import type { GridColDef, GridRowModel } from '@mui/x-data-grid'
 import UploadFileIcon from '@mui/icons-material/UploadFile'
+import { buildTheme } from './theme'
 
 type TimeEntry = {
   id: number
@@ -27,12 +30,12 @@ type TimeEntry = {
 }
 
 const columns: GridColDef[] = [
-  { field: 'client',   headerName: 'Client',   flex: 1, minWidth: 130, editable: true },
-  { field: 'project',  headerName: 'Project',  flex: 1, minWidth: 150, editable: true },
-  { field: 'task',     headerName: 'Task',     flex: 1, minWidth: 150, editable: true },
+  { field: 'client',   headerName: 'Client',   flex: 1, minWidth: 140, editable: true },
+  { field: 'project',  headerName: 'Project',  flex: 1, minWidth: 160, editable: true },
+  { field: 'task',     headerName: 'Task',     flex: 1, minWidth: 160, editable: true },
   { field: 'hours',    headerName: 'Hours',    width: 80,  editable: true },
   { field: 'billable', headerName: 'Billable', width: 90,  editable: true, type: 'boolean' },
-  { field: 'notes',    headerName: 'Notes',    flex: 1, minWidth: 150, editable: true },
+  { field: 'notes',    headerName: 'Notes',    flex: 1, minWidth: 160, editable: true },
 ]
 
 function App() {
@@ -46,10 +49,7 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const theme = useMemo(
-    () => createTheme({ palette: { mode: darkMode ? 'dark' : 'light' } }),
-    [darkMode]
-  )
+  const theme = useMemo(() => buildTheme(darkMode), [darkMode])
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -101,15 +101,26 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h5">Time Entry Extractor</Typography>
-          <FormControlLabel
-            control={<Switch checked={darkMode} onChange={(e) => setDarkMode(e.target.checked)} />}
-            label="Dark mode"
-          />
-        </Box>
 
+      <AppBar position="static" color="primary" elevation={2}>
+        <Toolbar sx={{ gap: 2 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, flexGrow: 1, letterSpacing: '0.5px' }}>
+            ClickTime — Time Entry Extractor
+          </Typography>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={darkMode}
+                onChange={(e) => setDarkMode(e.target.checked)}
+                sx={{ '& .MuiSwitch-track': { bgcolor: 'rgba(255,255,255,0.3)' } }}
+              />
+            }
+            label={<Typography variant="body2" sx={{ color: 'white' }}>Dark mode</Typography>}
+          />
+        </Toolbar>
+      </AppBar>
+
+      <Box sx={{ p: 3, bgcolor: 'background.default', minHeight: 'calc(100vh - 64px)' }}>
         <Card sx={{ mb: 3 }}>
           <CardContent>
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -122,19 +133,25 @@ function App() {
               />
               <Button
                 variant="contained"
+                color="primary"
                 startIcon={<UploadFileIcon />}
                 onClick={() => inputRef.current?.click()}
               >
                 Choose Image
               </Button>
-              <Button
-                variant="contained"
-                color="secondary"
-                disabled={!imageUrl || loading}
-                onClick={handleProcess}
-              >
-                {loading ? <CircularProgress size={20} color="inherit" /> : 'Process'}
-              </Button>
+              <Tooltip title={!imageUrl ? 'Choose an image first' : ''}>
+                <span>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    disabled={!imageUrl || loading}
+                    onClick={handleProcess}
+                    sx={{ minWidth: 100 }}
+                  >
+                    {loading ? <CircularProgress size={20} color="inherit" /> : 'Process'}
+                  </Button>
+                </span>
+              </Tooltip>
               {imageName && (
                 <Typography variant="body2" color="text.secondary">{imageName}</Typography>
               )}
@@ -145,7 +162,7 @@ function App() {
                 component="img"
                 src={imageUrl}
                 alt={imageName ?? 'uploaded image'}
-                sx={{ mt: 2, maxWidth: '100%', maxHeight: 300, objectFit: 'contain', borderRadius: 2, boxShadow: 3, display: 'block' }}
+                sx={{ mt: 2, maxWidth: '100%', maxHeight: 300, objectFit: 'contain', borderRadius: 1, boxShadow: 2, display: 'block' }}
               />
             )}
           </CardContent>
@@ -157,7 +174,7 @@ function App() {
 
         {rows.length > 0 && (
           <Box>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
               {rows.length} entr{rows.length === 1 ? 'y' : 'ies'} extracted — click any cell to edit
             </Typography>
             <DataGrid
