@@ -69,7 +69,7 @@ export default function TimeEntryGrid({ rows, clicktimeData, onRowUpdate, onRowD
       field: 'task', headerName: 'Task', flex: 1, minWidth: 160, editable: true,
       renderEditCell: (params) => <SelectEditCell params={params} options={getTaskOptions(params.row.client)} />,
     },
-    { field: 'hours',    headerName: 'Hours',    width: 80, editable: true },
+    { field: 'hours', headerName: 'Hours', width: 80, editable: true, align: 'right', headerAlign: 'right' },
     { field: 'billable', headerName: 'Billable', width: 90, editable: true, type: 'boolean' },
     {
       field: 'notes', headerName: 'Notes', flex: 1, minWidth: 160, editable: true,
@@ -120,7 +120,7 @@ export default function TimeEntryGrid({ rows, clicktimeData, onRowUpdate, onRowD
         getRowHeight={() => 'auto'}
         pageSizeOptions={[10, 25, 50]}
         initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-        sx={{ '& .MuiDataGrid-cell': { alignItems: 'flex-start', py: 1 } }}
+        sx={{ '& .MuiDataGrid-cell': { alignItems: 'center' } }}
       />
     </Box>
   )
