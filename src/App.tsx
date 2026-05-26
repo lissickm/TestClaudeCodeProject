@@ -15,7 +15,15 @@ import {
 } from '@mui/material'
 import UploadFileIcon from '@mui/icons-material/UploadFile'
 
-type TimeEntry = { customer: string; hours: string; tasksCompleted: string[] }
+type TimeEntry = {
+  client: string
+  project: string
+  task: string
+  hours: string
+  billable: boolean | null
+  notes: string
+  customFields: Record<string, string>
+}
 
 function App() {
   const [darkMode, setDarkMode] = useState(false)
@@ -151,14 +159,28 @@ function App() {
                 </Typography>
                 {entries.map((entry, i) => (
                   <Box key={i} sx={{ p: 2, mb: 1, borderRadius: 2, bgcolor: 'action.hover' }}>
-                    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{entry.customer}</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      Hours: {entry.hours}
-                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{entry.client}</Typography>
+                      {entry.billable !== null && (
+                        <Typography variant="caption" sx={{ px: 1, py: 0.25, borderRadius: 1, bgcolor: entry.billable ? 'success.main' : 'warning.main', color: 'white' }}>
+                          {entry.billable ? 'Billable' : 'Non-billable'}
+                        </Typography>
+                      )}
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">{entry.project}</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{entry.task}</Typography>
                     <Divider sx={{ mb: 1 }} />
-                    {entry.tasksCompleted.map((task, j) => (
-                      <Typography key={j} variant="body2">• {task}</Typography>
-                    ))}
+                    <Typography variant="body2">Hours: <strong>{entry.hours}</strong></Typography>
+                    {entry.notes && (
+                      <Typography variant="body2" sx={{ mt: 0.5 }}>Notes: {entry.notes}</Typography>
+                    )}
+                    {Object.keys(entry.customFields ?? {}).length > 0 && (
+                      <Box sx={{ mt: 0.5 }}>
+                        {Object.entries(entry.customFields).map(([key, val]) => (
+                          <Typography key={key} variant="body2">{key}: {val}</Typography>
+                        ))}
+                      </Box>
+                    )}
                   </Box>
                 ))}
               </Box>

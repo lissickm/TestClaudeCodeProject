@@ -20,7 +20,7 @@ export default async function handler(req: any, res: any) {
   try {
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
+      max_tokens: 2048,
       messages: [
         {
           role: 'user',
@@ -35,19 +35,28 @@ export default async function handler(req: any, res: any) {
             },
             {
               type: 'text',
-              text: `This image contains time management data. Extract every entry and return a JSON array with this exact shape:
+              text: `This image contains a ClickTime timesheet. Extract every time entry row and return a JSON array with this exact shape:
 [
   {
-    "customer": "string",
+    "client": "string",
+    "project": "string",
+    "task": "string",
     "hours": "string",
-    "tasksCompleted": ["string"]
+    "billable": true | false | null,
+    "notes": "string",
+    "customFields": { "fieldName": "value" }
   }
 ]
 
 Rules:
-- One object per customer entry
-- "hours" should be the amount of time worked as a string (e.g. "2.5", "3h", whatever is in the image)
-- "tasksCompleted" is an array of individual task strings
+- One object per time entry row
+- "client" is the client name
+- "project" is the project name or code
+- "task" is the task description
+- "hours" is the total hours as a string (e.g. "2.5", "3.25")
+- "billable" is true if marked billable, false if non-billable, null if not indicated
+- "notes" is any note text associated with the entry, or empty string if none
+- "customFields" is an object of any additional fields visible in the entry, or empty object if none
 - Return only the raw JSON array, no explanation or markdown`,
             },
           ],
