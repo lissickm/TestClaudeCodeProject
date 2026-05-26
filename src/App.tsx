@@ -1,32 +1,32 @@
-import { useState, useMemo } from 'react'
-import { Box, CssBaseline, ThemeProvider, Typography } from '@mui/material'
+import { useState } from 'react'
+import { Box, CssBaseline, ThemeProvider } from '@mui/material'
 import type { GridRowModel } from '@mui/x-data-grid'
 import Header from './components/Header'
 import ImageUploader from './components/ImageUploader'
 import TimeEntryGrid from './components/TimeEntryGrid'
-import { processImage } from './services/processImage'
+import GridSkeleton from './components/GridSkeleton'
+import ErrorAlert from './components/ErrorAlert'
+import { useClicktimeData } from './hooks/useClicktimeData'
+import { useProcessImage } from './hooks/useProcessImage'
 import { buildTheme } from './theme'
 import type { TimeEntry } from './types'
+import { useMemo } from 'react'
 
 export default function App() {
   const [darkMode, setDarkMode] = useState(false)
   const [rows, setRows] = useState<TimeEntry[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   const theme = useMemo(() => buildTheme(darkMode), [darkMode])
 
-  async function handleProcess(imageBase64: string, mediaType: string) {
-    setLoading(true)
+  const clicktimeData = useClicktimeData()
+  const { mutate: processImage, isPending, error, reset } = useProcessImage()
+
+  function handleProcess(imageBase64: string, mediaType: string) {
     setRows([])
-    setError(null)
-    try {
-      setRows(await processImage(imageBase64, mediaType))
-    } catch (err: any) {
-      setError(err.message ?? 'Something went wrong')
-    } finally {
-      setLoading(false)
-    }
+    processImage(
+      { imageBase64, mediaType },
+      { onSuccess: (entries) => setRows(entries) }
+    )
   }
 
   function handleRowUpdate(newRow: GridRowModel) {
@@ -43,9 +43,16 @@ export default function App() {
       <CssBaseline />
       <Header darkMode={darkMode} onToggle={setDarkMode} />
       <Box sx={{ p: 3, bgcolor: 'background.default', minHeight: 'calc(100vh - 64px)' }}>
-        <ImageUploader loading={loading} onProcess={handleProcess} />
-        {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
-        {rows.length > 0 && <TimeEntryGrid rows={rows} onRowUpdate={handleRowUpdate} onRowDelete={handleRowDelete} />}
+        <ImageUploader
+          loading={isPending}
+          clicktimeLoading={clicktimeData.isLoading}
+          onProcess={handleProcess}
+        />
+        <ErrorAlert error={error instanceof Error ? error : null} onDismiss={reset} />
+        {isPending && <GridSkeleton />}
+        {!isPending && rows.length > 0 && (
+          <TimeEntryGrid rows={rows} onRowUpdate={handleRowUpdate} onRowDelete={handleRowDelete} />
+        )}
       </Box>
     </ThemeProvider>
   )

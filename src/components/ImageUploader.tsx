@@ -4,10 +4,12 @@ import UploadFileIcon from '@mui/icons-material/UploadFile'
 
 type Props = {
   loading: boolean
+  clicktimeLoading: boolean
   onProcess: (imageBase64: string, mediaType: string) => void
 }
 
-export default function ImageUploader({ loading, onProcess }: Props) {
+export default function ImageUploader({ loading, clicktimeLoading, onProcess }: Props) {
+  const busy = loading || clicktimeLoading
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [imageBase64, setImageBase64] = useState<string | null>(null)
   const [mediaType, setMediaType] = useState('image/jpeg')
@@ -45,6 +47,7 @@ export default function ImageUploader({ loading, onProcess }: Props) {
             variant="contained"
             color="primary"
             startIcon={<UploadFileIcon />}
+            disabled={busy}
             onClick={() => inputRef.current?.click()}
           >
             Choose Image
