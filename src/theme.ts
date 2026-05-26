@@ -1,4 +1,5 @@
 import { createTheme } from '@mui/material'
+import type {} from '@mui/x-data-grid/themeAugmentation'
 
 const clicktimeBlue = '#1B5FAB'
 const clicktimeBlueDark = '#154d8a'

@@ -1,7 +1,7 @@
 import { DataGrid } from '@mui/x-data-grid'
 import type { GridColDef, GridRowModel } from '@mui/x-data-grid'
 import { Box, IconButton, Tooltip, Typography } from '@mui/material'
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
+import { DeleteOutline as DeleteOutlineIcon } from '@mui/icons-material'
 import type { TimeEntry } from '../types'
 
 type Props = {
