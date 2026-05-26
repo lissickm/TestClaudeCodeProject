@@ -12,7 +12,8 @@ import {
   Typography,
   createTheme,
 } from '@mui/material'
-import { DataGrid, GridColDef, GridRowModel } from '@mui/x-data-grid'
+import { DataGrid } from '@mui/x-data-grid'
+import type { GridColDef, GridRowModel } from '@mui/x-data-grid'
 import UploadFileIcon from '@mui/icons-material/UploadFile'
 
 type TimeEntry = {
